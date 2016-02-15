@@ -2,9 +2,10 @@
 
 import psycopg2
 from psycopg2 import extras
+from spendingconfig import mydb
 
 try:
-	conn = psycopg2.connect('postgresql://ianphillips@localhost/sharedexpenses')
+	conn = psycopg2.connect(mydb)
 	# print "Connected to sharedexpenses!"
 except:
 	print "Not connecting to sharedexpenses db"
