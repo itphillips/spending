@@ -1,4 +1,6 @@
 # script to interact with expenses db
+# create a file called "spendingconfig.py" to include "mydb = PATH TO YOUR LOCAL DATABASE"--add this file to .gitignore
+# run lines "cur.execute("CREATE TABLE...")" only the first time you run this script--comment them out afterwards
 
 import psycopg2
 from psycopg2 import extras
@@ -101,17 +103,18 @@ def enter_expense_type():
 		except:
 			print "I can't add that expense type to the db!"
 		
-# def see_totals():
-# 	user = str.capitalize(raw_input("Who do you want to see totals for? "))
-# 	dict_cur.execute("SELECT * FROM person WHERE personname = %s", (user,))
-# 	user_record = dict_cur.fetchone()
-# 	user_id = int(user_record['id'])
+def see_totals():
+	user = str.capitalize(raw_input("Who do you want to see totals for? "))
+	dict_cur.execute("SELECT * FROM person WHERE personname = %s", (user,))
+	user_record = dict_cur.fetchone()
+	user_id = int(user_record['id'])
 
-# 	try:
-# 		paymentsbyuser = dict_cur.execute("SELECT SUM(amount) FROM payments INNER JOIN person ON payments.payer_id = person.id WHERE person.id = %s", (user_id,))
-# 		print "%s has paid %s" % (user, paymentbyuser)
-# 	except:
-# 		print "Can't calculate totals for %s!" % (user)
+	try:
+		paymentsbyuser = dict_cur.execute("SELECT SUM(payments.amount) FROM payments INNER JOIN person ON payments.payer_id = person.id WHERE person.id = %s", (user_id,))
+		userpayment = dict_cur.fetchone()
+		print "%s has paid $%s" % (user, userpayment[0])
+	except:
+		print "Can't calculate totals for %s!" % (user)
 
 
 def main():
