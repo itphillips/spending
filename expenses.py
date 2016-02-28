@@ -3,6 +3,8 @@
 # run lines "cur.execute("CREATE TABLE...")" only the first time you run this script--comment them out afterwards
 
 import psycopg2
+import datetime
+import calendar
 from psycopg2 import extras
 from spendingconfig import mydb
 
@@ -17,7 +19,7 @@ dict_cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
 # cur.execute("CREATE TABLE person (id serial PRIMARY KEY, name varchar(10));")
 # cur.execute("CREATE TABLE expensetypes (id serial PRIMARY KEY, expensetype varchar(50));")
-# cur.execute("CREATE TABLE payments (id serial PRIMARY KEY, payer_id int REFERENCES person(id), expensetype_id int REFERENCES expensetypes(id), name varchar(50), amount numeric(4,2), paydate date);")
+# cur.execute("CREATE TABLE payments (id serial PRIMARY KEY, payer_id int REFERENCES person(id), expensetype_id int REFERENCES expensetypes(id), name varchar(50), amount double precision, paydate date);")
 
 
 def enter_name():
@@ -81,7 +83,7 @@ def enter_payment():
 		except:
 			print "I can't enter your payment in the db!"
 	else:
-		print "start over!"
+		print "not saved to db! enter this payment again!"
 
 def enter_expense_type():
 	print "These are the current expense types: "
@@ -103,22 +105,28 @@ def enter_expense_type():
 		except:
 			print "I can't add that expense type to the db!"
 		
-def see_totals():
+def month_totals():
 	user = str.capitalize(raw_input("Who do you want to see totals for? "))
+	month = str.capitalize(raw_input("What month do you want to see totals for? "))
+	year = input("What year? ")
+	monthdict = {'January': 1, 'February': 2, 'March': 3, 'April': 4, 'May': 5, 'June': 6, 'July': 7, 'August': 8, 'September': 9, 'October': 10, 'November': 11, 'December': 12}
+	monthnum = monthdict[month]
+	firstday = 1
+	lastday = calendar.monthrange(year, monthnum)[1]
 	dict_cur.execute("SELECT * FROM person WHERE personname = %s", (user,))
 	user_record = dict_cur.fetchone()
 	user_id = int(user_record['id'])
 
 	try:
-		paymentsbyuser = dict_cur.execute("SELECT SUM(payments.amount) FROM payments INNER JOIN person ON payments.payer_id = person.id WHERE person.id = %s", (user_id,))
+		paymentsbyuser = dict_cur.execute("SELECT SUM(payments.amount) FROM payments INNER JOIN person ON payments.payer_id = person.id WHERE person.id = %s AND payments.paydate BETWEEN %s and %s;", (user_id, datetime.date(year,monthnum,firstday), datetime.date(year,monthnum,lastday)))
 		userpayment = dict_cur.fetchone()
-		print "%s has paid $%s" % (user, userpayment[0])
+		print "%s paid $%s in %s %s" % (user, userpayment[0], month, year)
 	except:
 		print "Can't calculate totals for %s!" % (user)
 
 
 def main():
-	task = raw_input("What do you want to do? Pick a number. \n(1) enter payment \n(2) enter name \n(3) see names \n(4) see payments \n(5) enter expense types \n(6) see total payments for user \n: ")
+	task = raw_input("What do you want to do? Pick a number. \n(1) enter payment \n(2) enter name \n(3) see names \n(4) see payments \n(5) enter expense types \n(6) see payments by month for user \n: ")
 
 	if task == "1":
 		enter_payment()
@@ -131,7 +139,7 @@ def main():
 	elif task == "5":
 		enter_expense_type()
 	elif task == "6":
-		see_totals()
+		month_totals()
 	else:
 		print "Pick one of these!"
 
