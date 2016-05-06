@@ -1,2 +1,7 @@
 spendingconfig.py
-spendingconfig.pyc
+*.pyc
+*#
+*~
+.python-version
+__pycache__
+*.db
